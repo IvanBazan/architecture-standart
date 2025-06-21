@@ -1,0 +1,27 @@
+@startuml
+title передача ставок по депозитам в колл-центры
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(user, "Клиент банка", "Пользователь")
+
+
+System(deposit, "Система создания депозитов банка Стандарт", "Позволяет создавать депозиты для клиентов. Источник актуальных ставок")
+
+System(call_int, "Колл-центр банка", "Звонки клиентам")
+System_Ext(call_ext, "Партнерский колл-центр", "Звонки клиентам")
+
+Person(admin, "Сотрудники банка", "Представители бэк-офиса")
+
+
+Rel(admin,deposit,"Обновляют ставки в системе")
+Rel(deposit,call_int,"")
+BiRel(call_int,user,"Передаёт клиентам актуальную информацию по депозитам")
+Rel(deposit,call_ext, "")
+BiRel(call_ext,user,"Передаёт клиентам актуальную информацию по депозитам")
+
+
+
+@enduml
