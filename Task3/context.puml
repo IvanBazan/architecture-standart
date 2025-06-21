@@ -1,0 +1,27 @@
+@startuml
+title MVP цифровизации депозитарных операций
+
+left to right direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(user, "Клиент банка", "Пользователь")
+
+
+System(deposit, "Система создания депозитов банка Стандарт", "Позволяет создавать депозиты для клиентов и администрировать их создание")
+
+System_Ext(sms, "СМС шлюз + телеком оператор", "Рассылка сообщений клиентам")
+System_Ext(call_ext, "Партнерский колл-центр", "Звонки клиентам")
+
+Person(admin, "Сотрудники банка", "Представители бэк-офиса, фронт офиса и колл-центра")
+
+Rel(user, deposit, "Использует систему создания депозита в банке")
+Rel(admin,deposit,"Сопроваждают процесс создания депозитов")
+Rel(deposit,sms,"")
+Rel(sms,user,"Производит рассылку сообщений клиентам")
+Rel(deposit,call_ext, "")
+Rel(call_ext,user,"Звонит клиентам для подтверждения создания депозитов")
+
+
+
+@enduml
