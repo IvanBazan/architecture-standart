@@ -1,0 +1,68 @@
+@startuml
+title MVP цифровизации депозитарных операций
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Person(user, "Клиент компании", "Пользователь")
+Person(backOfficeDeposit, "Сотрудник бэк-офиса отдел депозитов", "")
+Person(backOfficeCredit, "Сотрудник бэк-офиса отдел кредитов", "")
+Person(frontOffice, "Сотрудник фронт-офиса", "Работник в отделении банка")
+Person(callCenter, "Сотрудник колл-центра", "Работник в колл центре")
+
+System(depositSystem, "Система создания депозитов банка Стандарт", "Позволяет создавать депозиты для клиентов и администрировать их создание")
+
+Container_Boundary(depositSystem, "Система создания депозитов банка Стандарт") {
+ Container(site, "Сайт банка", "PHP, React.js")
+ Container_Boundary(webApp, "приложение Интернет-банка"){
+    Container(webApp_front, "frontend Интернет-банка", "ASP.NET")
+    Container(webApp_back, "backend монолит Интернет-банка", ".NET")
+    ContainerDb(webApp_DB, "БД Интернет-банка", "MSSQL")
+  }
+  Container_Boundary(АБС, "Автоматизированнная банковская система"){
+    Container(АБС_app, "Автоматизированнная банковская система", "Delphi")
+    Container(АБС_API_old, "API сервис АБС, старый", "Delphi")
+    Container(АБС_API_new, "API сервис АБС, новый", "Java")
+    ContainerDb(АБС_DB, "БД АБС", "Oracle", "слой данных, слой логики")
+  }
+  ComponentQueue(kafka, "Брокер сообщений", "kafka")
+}
+Container(callCenterSystem, "Система колл-центра", "React.js, Java Spring Boot, PostgreSQL")
+
+System_Ext(sms, "СМС шлюз + телеком оператор")
+
+Rel(user, site, "Подаёт заявку на депозит через сайт", "HTTPS")
+Rel(user, webApp_front, "Подаёт заявку на депозит через приложение Интернет-банка", "HTTPS")
+
+Rel(kafka, site, "Полуает ставки по депозитам", "TCP")
+Rel(site, kafka, "Вносит заявку на депозит", "TCP")
+
+Rel(webApp_back, kafka, "Полуает ставки по депозитам", "TCP")
+Rel(webApp_back, kafka, "Вносит заявку на депозит", "TCP")
+
+Rel(АБС_API_new, kafka, "Вносит заявку на депозит", "TCP")
+
+Rel(backOfficeCredit, АБС_app, "Вносит ставки")
+
+Rel(backOfficeDeposit, АБС_app, "Вносит персональные ставки, подтверждает открытие депозита")
+
+Rel(АБС_app, callCenterSystem, "Передаёт информацию о новом клиенте")
+Rel(callCenterSystem, callCenter, "")
+Rel(callCenter,user, "Звонит пользователю по заявке на создание депозита через")
+
+Rel(frontOffice, АБС_app,  "Обрабатывает заявки на депозит для новых клиентов")
+Rel(frontOffice,user, "Идентифицирует клиента")
+
+Rel(АБС_app, sms, "")
+Rel_U(sms,user, "СМС об открытии депозита, СМС подтверждения")
+
+Rel(webApp_front, webApp_back, "")
+Rel_D(webApp_back, webApp_DB, "")
+
+Rel(АБС_app, АБС_API_old, "")
+Rel(АБС_API_old, АБС_DB, "", "OCI")
+Rel(АБС_API_new, АБС_DB, "", "JDBC")
+
+@enduml

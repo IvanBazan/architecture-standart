@@ -1,0 +1,57 @@
+@startuml
+title передача ставок по депозитам в колл-центры
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Person(user, "Клиент компании", "Пользователь")
+Person(backOffice, "Бэк офис", $sprite="person2")
+
+System(depositSystem, "Система создания депозитов банка Стандарт", "Позволяет создавать депозиты для клиентов. Источник актуальных ставок")
+System(callCenter, "Колл-центр банка", "")
+System(callCenterExt, "Внешний колл-центр", "")
+
+Container_Boundary(callCenter, "") {
+  Person(callCenterEmp, "Сотрудник колл-центра", "Работник в колл центре")
+  Container(callCenter_system, "система колл-центра")
+}
+
+Container_Boundary(callCenterExt, "") {
+  Person_Ext(callCenterExtEmp, "Сотрудник внешнего колл-центра", "Работник в колл центре")
+  Container(callCenterExt_system, "система внешнего колл-центра")
+}
+
+
+Container_Boundary(depositSystem, "Система создания депозитов банка Стандарт") {
+  Container_Boundary(АБС, "Автоматизированнная банковская система"){
+    Container(АБС_app, "Приложение АБС", "Delphi")
+    Container(АБС_API_new, "сервис АБС, новый", "Java")
+    ContainerDb(АБС_DB, "БД АБС", "Oracle", "слой данных, слой логики")
+  }
+  ComponentQueue(kafka, "Брокер сообщений", "kafka")
+  Container(webApp_back, "backend монолит Интернет-банка", ".NET")
+
+}
+
+BiRel(callCenterEmp,user, "Передаёт клиентам актуальную информацию по депозитам")
+BiRel(callCenterExtEmp,user, "Передаёт клиентам актуальную информацию по депозитам")
+
+Rel(callCenterExtEmp, callCenterExt_system, "")
+Rel(callCenterEmp, callCenter_system, "")
+
+Rel(backOffice, АБС_app, "Вносит ставки")
+
+Rel(АБС_app, АБС_DB, "", "OCI")
+Rel(АБС_API_new, АБС_DB, "", "JDBC")
+
+Rel(АБС_API_new, kafka, "", "TCP")
+
+Rel(webApp_back, kafka, "Подписан на ставки по депозитам", "TCP")
+
+Rel(callCenter_system, webApp_back, "Альтернатива: Читает актуальные ставки", "REST")
+Rel(callCenter_system, kafka, "Подписан на актуальные ставки", "TCP")
+
+Rel(АБС_app, callCenterExt_system, "Отправляет ставки через email", "SMTP")
+
+@enduml
